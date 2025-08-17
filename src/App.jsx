@@ -18,7 +18,6 @@ const toISODateTimeLocal = (d) => {
 
 // ---- Sample Data (8 members / 5 events) ----
 const demoProfiles = [
-  // 1
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "斎藤 あかね", fullName: "斎藤 あかね",
     headline: "整体 × 栄養アドバイス",
@@ -32,7 +31,6 @@ const demoProfiles = [
     ],
     createdAt: Date.now() - 1000*60*60*24*3,
   },
-  // 2
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "KENJI", fullName: "山本 健司",
     headline: "パーソナルトレーナー（ダイエット特化）",
@@ -46,7 +44,6 @@ const demoProfiles = [
     ],
     createdAt: Date.now() - 1000*60*60*24*10,
   },
-  // 3
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "若見えLABO", fullName: "若見えLABO",
     headline: "エステ×肌診断 AIで若くいたいを叶える",
@@ -60,7 +57,6 @@ const demoProfiles = [
     ],
     createdAt: Date.now() - 1000*60*60*24*30,
   },
-  // 4
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "YOJI", fullName: "YOJI",
     headline: "自分夢作成プロデューサー",
@@ -74,7 +70,6 @@ const demoProfiles = [
     ],
     createdAt: Date.now() - 1000*60*60*24*1,
   },
-  // 5
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "はるか（食と睡眠）", fullName: "田中 はるか",
     headline: "管理栄養士 × 睡眠カウンセラー",
@@ -88,7 +83,6 @@ const demoProfiles = [
     ],
     createdAt: Date.now() - 1000*60*60*24*6,
   },
-  // 6
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "内海 直樹", fullName: "内海 直樹",
     headline: "呼吸法コーチ",
@@ -100,7 +94,6 @@ const demoProfiles = [
     events: [],
     createdAt: Date.now() - 1000*60*60*24*20,
   },
-  // 7
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "グリーンフード鈴木", fullName: "鈴木 みどり",
     headline: "発酵食アドバイザー",
@@ -112,7 +105,6 @@ const demoProfiles = [
     events: [],
     createdAt: Date.now() - 1000*60*60*24*25,
   },
-  // 8
   { id: uid(), owner: "demo@site", isPublic: true,
     displayName: "RINA（姿勢ラボ）", fullName: "高橋 里奈",
     headline: "理学療法士 / 姿勢改善",
@@ -448,7 +440,7 @@ function EditForm({ profile, onSave, onCancel }){
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3 mt-3">
                   <div><label className="block text-sm mb-1">場所</label><Input value={ev.location} onChange={(e)=>updateEvent(ev.id, { location: e.target.value })} /></div>
-                  <div><label className="block text-sm mb-1">説明</label><Input value={ev.desc||\"\"} onChange={(e)=>updateEvent(ev.id, { desc: e.target.value })} /></div>
+                  <div><label className="block text-sm mb-1">説明</label><Input value={ev.desc || ""} onChange={(e)=>updateEvent(ev.id, { desc: e.target.value })} /></div>
                 </div>
 
                 <div className="mt-4 grid md:grid-cols-2 gap-4">
@@ -522,6 +514,24 @@ export default function App() {
   const [activeEvent, setActiveEvent] = useState(null);
   const [activeHost, setActiveHost] = useState(null);
 
+  // 検索エリアへのスムーズスクロール制御
+  const searchRef = useRef(null);
+  const [needScrollToSearch, setNeedScrollToSearch] = useState(false);
+  const goToSearch = () => {
+    if (mode !== "home") {
+      setNeedScrollToSearch(true);
+      setMode("home");
+    } else {
+      searchRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+  useEffect(() => {
+    if (mode === "home" && needScrollToSearch) {
+      searchRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setNeedScrollToSearch(false);
+    }
+  }, [mode, needScrollToSearch]);
+
   useEffect(()=>{ saveAuth(me); }, [me]);
 
   const myProfile = useMemo(()=> profiles.find(p=> p.owner===me) || null, [profiles, me]);
@@ -539,7 +549,7 @@ export default function App() {
   const startEdit = () => {
     if (!me) { setMode("login"); return; }
     if (myProfile) { setActive(myProfile); setMode("edit"); }
-    else { setActive(emptyProfile(me)); setMode("edit"); }
+    else { setActive({ id: uid(), owner: me, isPublic: true, displayName: "", fullName: "", headline: "", bio: "", business: "", problems: "", contact: { line: "", sns: "", email: "" }, images: [], events: [], createdAt: Date.now() }); setMode("edit"); }
   };
 
   const saveProfile = (p) => {
@@ -559,7 +569,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
           <div className="font-black tracking-tight text-xl truncate">make a wish 会員マッチング</div>
           <nav className="ml-auto flex items-center gap-2">
-            <Button onClick={()=>setMode("directory")}>会員を探す</Button>
+            <Button onClick={goToSearch}>会員を探す</Button>
             <Button onClick={startEdit} className="bg-rose-700 text-white">プロフィール登録</Button>
             {me ? (<><span className="text-sm text-gray-500 hidden sm:inline">{me}</span><Button onClick={logout}>ログアウト</Button></>) : (<Button onClick={()=>setMode("login")}>ログイン</Button>)}
           </nav>
@@ -574,31 +584,31 @@ export default function App() {
               <p className="text-rose-700/80 font-medium">make a wish 会員マッチング</p>
             </div>
             <FeaturedCarousel items={visibleList.slice(0, 8)} onOpen={(p)=>{ setActive(p); setMode("detail"); }} />
-            <div className="mt-8"><SearchBar value={query} onChange={setQuery} onSubmit={()=>setMode(\"directory\")} /></div>
-            <UpcomingEvents profiles={visibleList} onOpenEvent={(ev,host)=>{ setActiveEvent(ev); setActiveHost(host); setMode(\"event\"); }} />
+            <div ref={searchRef} className="mt-8"><SearchBar value={query} onChange={setQuery} onSubmit={()=>setMode("directory")} /></div>
+            <UpcomingEvents profiles={visibleList} onOpenEvent={(ev,host)=>{ setActiveEvent(ev); setActiveHost(host); setMode("event"); }} />
             <h2 className="text-xl font-semibold mt-10 mb-3">新着会員</h2>
-            <Directory items={visibleList.slice(0,6)} onOpen={(p)=>{ setActive(p); setMode(\"detail\"); }} />
+            <Directory items={visibleList.slice(0,6)} onOpen={(p)=>{ setActive(p); setMode("detail"); }} />
           </div>
         )}
 
         {mode === "directory" && (
           <div>
             <div className="mb-6"><SearchBar value={query} onChange={setQuery} onSubmit={()=>{}} /></div>
-            <Directory items={results} onOpen={(p)=>{ setActive(p); setMode(\"detail\"); }} />
+            <Directory items={results} onOpen={(p)=>{ setActive(p); setMode("detail"); }} />
           </div>
         )}
 
-        {mode === "detail" && active && (<Detail p={active} onBack={()=> setMode(\"directory\")} />)}
-        {mode === "event" && activeEvent && (<EventDetail ev={activeEvent} host={activeHost} onBack={()=> setMode(\"home\")} />)}
-        {mode === "edit" && active && (<EditForm profile={active} onSave={saveProfile} onCancel={()=> setMode(\"home\")} />)}
+        {mode === "detail" && active && (<Detail p={active} onBack={()=> setMode("directory")} />)}
+        {mode === "event" && activeEvent && (<EventDetail ev={activeEvent} host={activeHost} onBack={()=> setMode("home")} />)}
+        {mode === "edit" && active && (<EditForm profile={active} onSave={saveProfile} onCancel={()=> setMode("home")} />)}
 
         {mode === "login" && (
           <div className="max-w-md mx-auto border border-rose-100 bg-white/80 rounded-2xl p-6 shadow-sm">
             <div className="text-xl font-semibold mb-4">ログイン / 新規メール登録</div>
-            <Input placeholder="メールアドレス" onKeyDown={(e)=>{ if(e.key==='Enter'){ setMe(e.currentTarget.value); setMode(\"home\"); } }} />
+            <Input placeholder="メールアドレス" onKeyDown={(e)=>{ if(e.key==='Enter'){ setMe(e.currentTarget.value); setMode("home"); } }} />
             <div className="mt-3 flex gap-2">
-              <Button className="bg-rose-600 text-white" onClick={()=>{ const el = document.querySelector(\"input[placeholder='メールアドレス']\"); const v = el?.value?.trim(); if (!v) return; setMe(v); setMode(\"home\"); }}>続ける</Button>
-              <Button onClick={()=> setMode(\"home\")}>キャンセル</Button>
+              <Button className="bg-rose-600 text-white" onClick={()=>{ const el = document.querySelector("input[placeholder='メールアドレス']"); const v = el?.value?.trim(); if (!v) return; setMe(v); setMode("home"); }}>続ける</Button>
+              <Button onClick={()=> setMode("home")}>キャンセル</Button>
             </div>
             <p className="text-xs text-gray-500 mt-4">※ このデモではパスワードは不要です。メールはローカル保存のみで送信されません。</p>
           </div>
